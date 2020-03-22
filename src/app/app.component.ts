@@ -43,8 +43,6 @@ export class AppComponent implements OnInit {
         }
       );
     }
-
-    console.table(this.marketData);
   }
 
 }
