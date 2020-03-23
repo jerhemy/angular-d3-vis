@@ -1,23 +1,29 @@
-import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, OnInit, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
+import {Observable} from 'rxjs';
+import {formatCurrency} from '@angular/common';
 
 @Component({
   selector: 'app-line-chart',
   templateUrl: './line-chart.component.html',
   styleUrls: ['./line-chart.component.scss']
 })
-export class LineChartComponent implements OnInit, AfterViewInit {
-  @Input() private maindata: any = {
-    bpi: {'2017-12-31': 13860.1363, '2018-01-01': 13412.44, '2018-01-02': 14740.7563, '2018-01-03': 15134.6513, '2018-01-04': 15155.2263, '2018-01-05': 16937.1738, '2018-01-06': 17135.8363, '2018-01-07': 16178.495, '2018-01-08': 14970.3575, '2018-01-09': 14439.4738, '2018-01-10': 14890.7225, '2018-01-11': 13287.26, '2018-01-12': 13812.715, '2018-01-13': 14188.785, '2018-01-14': 13619.0288, '2018-01-15': 13585.9013, '2018-01-16': 11348.02, '2018-01-17': 11141.2488, '2018-01-18': 11250.6475, '2018-01-19': 11514.925, '2018-01-20': 12759.6413, '2018-01-21': 11522.8588, '2018-01-22': 10772.15, '2018-01-23': 10839.8263, '2018-01-24': 11399.52, '2018-01-25': 11137.2375, '2018-01-26': 11090.0638, '2018-01-27': 11407.1538, '2018-01-28': 11694.4675, '2018-01-29': 11158.3938, '2018-01-30': 10034.9975, '2018-01-31': 10166.5063, '2018-02-01': 9052.5763, '2018-02-02': 8827.63, '2018-02-03': 9224.3913, '2018-02-04': 8186.6488, '2018-02-05': 6914.26, '2018-02-06': 7700.3863, '2018-02-07': 7581.8038, '2018-02-08': 8237.2363, '2018-02-09': 8689.8388, '2018-02-10': 8556.6125, '2018-02-11': 8070.7963, '2018-02-12': 8891.2125, '2018-02-13': 8516.2438, '2018-02-14': 9477.84, '2018-02-15': 10016.4888, '2018-02-16': 10178.7125, '2018-02-17': 11092.1475, '2018-02-18': 10396.63, '2018-02-19': 11159.7238, '2018-02-20': 11228.2413, '2018-02-21': 10456.1725, '2018-02-22': 9830.4263, '2018-02-23': 10149.4625, '2018-02-24': 9682.3825, '2018-02-25': 9586.46, '2018-02-26': 10313.0825, '2018-02-27': 10564.4188, '2018-02-28': 10309.6413, '2018-03-01': 10907.59, '2018-03-02': 11019.5213, '2018-03-03': 11438.6513, '2018-03-04': 11479.7313, '2018-03-05': 11432.9825, '2018-03-06': 10709.5275, '2018-03-07': 9906.8, '2018-03-08': 9299.2838, '2018-03-09': 9237.05, '2018-03-10': 8787.1638, '2018-03-11': 9532.7413, '2018-03-12': 9118.2713, '2018-03-13': 9144.1475, '2018-03-14': 8196.8975, '2018-03-15': 8256.9938, '2018-03-16': 8269.3275, '2018-03-17': 7862.1088, '2018-03-18': 8196.0225, '2018-03-19': 8594.1913, '2018-03-20': 8915.9038, '2018-03-21': 8895.4, '2018-03-22': 8712.8913, '2018-03-23': 8918.7438, '2018-03-24': 8535.8938, '2018-03-25': 8449.835, '2018-03-26': 8138.3363, '2018-03-27': 7790.1575, '2018-03-28': 7937.205, '2018-03-29': 7086.4875, '2018-03-30': 6844.3213, '2018-03-31': 6926.0175, '2018-04-01': 6816.74}, disclaimer: 'This data was produced from the CoinDesk Bitcoin Price Index. BPI value data returned as USD.', time: {updated: 'Apr 2, 2018 00:03:00 UTC', updatedISO: '2018-04-02T00:03:00+00:00'}};
+export class LineChartComponent implements OnInit, OnChanges,  AfterViewInit {
   @ViewChild('chart') private chartContainer: ElementRef;
-  data: Array<any>;
+  @Input() data: Array<any>;
   private element: any;
 
   svgWidth = 600;
   svgHeight = 400;
-  margin = { top: 20, right: 20, bottom: 30, left: 50 };
+  margin = { top: 50, right: 20, bottom: 30, left: 50 };
   width = this.svgWidth - this.margin.left - this.margin.right;
   height = this.svgHeight - this.margin.top - this.margin.bottom;
+
+  totalSales: number;
+  private svg: any;
+
+  private x: any;
+  private y: any;
 
   constructor() { }
 
@@ -25,58 +31,106 @@ export class LineChartComponent implements OnInit, AfterViewInit {
 
   }
 
-  ngAfterViewInit(): void {
-    this.data = this.parseData(this.maindata);
-    this.createChart();
+  ngOnChanges() {
+    this.updateChart();
   }
 
-  private parseData(data) {
-    const arr = [];
-    for (const i in data.bpi) {
-      arr.push({ date: new Date(i), value: +data.bpi[i]});
-    }
-    console.table(arr);
-    return arr;
+  ngAfterViewInit(): void {
+    // this.data = this.parseData(this.maindata);
+    this.totalSales = this.data.reduce((acc, val) => {
+      return acc + val.value;
+    }, 0);
+    console.log(this.totalSales);
+
+    this.createChart();
+
+  }
+
+  private make_y_gridlines() {
+    return d3.axisLeft(this.y)
+      .ticks(9);
+  }
+
+  private make_x_gridlines() {
+    return d3.axisBottom(this.x)
+      .ticks(5);
   }
 
   private createChart() {
 
     this.element = this.chartContainer?.nativeElement;
 
-    const svg = d3.select(this.element).append('svg')
+    this.svg = d3.select(this.element).append('svg')
       .attr('width', this.svgWidth)
       .attr('height', this.svgHeight);
 
-    const g = svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')'   );
+    const g = this.svg.append('g')
+      .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')'   );
 
-    const x = d3.scaleTime().rangeRound([0, this.width]);
-    const y = d3.scaleLinear().rangeRound([this.height, 0]);
+    const xDomain = this.data.map(d => d.date);
 
-    x.domain(d3.extent(this.data, d => d.date ));
-    y.domain(d3.extent(this.data, d => d.value ));
+    const yDomain = [0, d3.max(this.data, d => d.value)];
+
+    // Scaling Time
+    this.x = d3.scaleTime().rangeRound([0, this.width]);
+
+    // Scaling Values
+    this.y = d3.scaleLinear().rangeRound([this.height, 0]);
+
+    this.x.domain(d3.extent(this.data, d => d.date ));
+    this.y.domain(d3.extent(this.data, d => d.value ));
+
+    d3.axisBottom(this.x).ticks(5);
+
+    const text = g.append('text');
+    let textLabels = text
+      .attr('x',  -5)
+      .attr('y', -10)
+      .text( formatCurrency(this.totalSales, 'en-US', '$', 'USD'))
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', '28px')
+      .attr('fill', 'red');
 
     const line = d3.line()
-      .x((d) => x(d['date']))
-      .y((d) => y(d['value']))
+      .x((d) => this.x(d['date']))
+      .y((d) => this.y(d['value']))
       .curve(d3.curveMonotoneX);
 
-    g.append('g').call(d3.axisLeft(y))
+    // add the Y gridlines
+    g.append('g')
+      .attr('class', 'grid')
+      .call(this.make_y_gridlines().tickSize(-this.width));
+
+    // add the X gridlines
+    // this.svg.append('g')
+    //   .attr('class', 'grid')
+    //   .attr('transform', 'translate(0,' + this.height + ')')
+    //   .call(this.make_x_gridlines()
+    //     .tickSize(-this.height)
+    //   );
+
+    // Add Y Axis Label
+    g.append('g')
+      .call(d3.axisLeft(this.y)
+        .tickFormat(d => formatCurrency(Number(d), 'en-US', '$', 'USD'))
+      )
       .append('text')
       .attr('fill', '#000')
       .attr('transform', 'rotate(-90)')
       .attr('y', 6)
-      .attr('dy', '0.71em')
+      .attr('dy', '0.5em')
       .attr('text-anchor', 'end')
-      // .text('Price ($)');
+      .text('Price ($)');
 
+    // Add X Axis Label
     g.append('g')
-      .call(d3.axisBottom(x))
+      .call(d3.axisBottom(this.x))
       .attr('transform', 'translate(0,' + this.height + ')')
       .append('text')
       .attr('fill', '#000')
       .attr('x', 6)
       .attr('dy', '0.71em')
-      .attr('text-anchor', 'end')
+      .attr('text-anchor', 'end');
       // .text('Date');
 
     // g.append('g')
@@ -93,5 +147,25 @@ export class LineChartComponent implements OnInit, AfterViewInit {
       .attr('stroke-width', 1.5)
       .attr('d', line);
 
+  }
+
+  private updateChart() {
+    // const update = this.svg.selectAll('.path')
+    //   .data(this.data);
+    //
+    // update.exit().remove();
+    //
+    // this.x.domain(d3.extent(this.data, function(d) { return d.date; }));
+    // this.y.domain([0, d3.max(this.data, function(d) { return d.close; })]);
+    //
+    // this.svg.select(".line")   // change the line
+    //   .duration(750)
+    //   .attr("d", valueline(data));
+    // this.svg.select(".x.axis") // change the x axis
+    //   .duration(750)
+    //   .call(xAxis);
+    // this.svg.select(".y.axis") // change the y axis
+    //   .duration(750)
+    //   .call(yAxis);
   }
 }

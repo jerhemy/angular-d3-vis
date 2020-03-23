@@ -38,8 +38,7 @@ export class AppComponent implements OnInit {
       const d = new Date();
       this.marketData.push({
           date: d.setDate(d.getDate() + i),
-          open: Math.floor(Math.random() * 100),
-          close: Math.floor(Math.random() * 100)
+          value: Math.floor(Math.random() * 1000)
         }
       );
     }

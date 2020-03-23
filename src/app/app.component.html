@@ -20,7 +20,7 @@
 
 <div class="content" role="main">
   <app-bar-chart *ngIf="chartData" [data]="chartData"></app-bar-chart>
-  <app-line-chart></app-line-chart>
+  <app-line-chart [data]="marketData"></app-line-chart>
 </div>
 
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
