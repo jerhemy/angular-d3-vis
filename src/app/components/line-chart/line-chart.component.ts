@@ -65,11 +65,7 @@ export class LineChartComponent implements OnInit, OnChanges,  AfterViewInit {
       .attr('height', this.svgHeight);
 
     const g = this.svg.append('g')
-      .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')'   );
-
-    const xDomain = this.data.map(d => d.date);
-
-    const yDomain = [0, d3.max(this.data, d => d.value)];
+      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
     // Scaling Time
     this.x = d3.scaleTime().rangeRound([0, this.width]);
@@ -82,18 +78,17 @@ export class LineChartComponent implements OnInit, OnChanges,  AfterViewInit {
 
     d3.axisBottom(this.x).ticks(5);
 
-    const text = g.append('text');
-    let textLabels = text
-      .attr('x',  -5)
-      .attr('y', -10)
-      .text( formatCurrency(this.totalSales, 'en-US', '$', 'USD'))
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', '28px')
-      .attr('fill', 'red');
+    const text = g.append('text')
+        .attr('x',  -5)
+        .attr('y', -10)
+        .text( formatCurrency(this.totalSales, 'en-US', '$', 'USD'))
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', '28px')
+        .attr('fill', 'red');
 
     const line = d3.line()
-      .x((d) => this.x(d['date']))
-      .y((d) => this.y(d['value']))
+      .x((d: any) => this.x(d.date))
+      .y((d: any) => this.y(d.value))
       .curve(d3.curveMonotoneX);
 
     // add the Y gridlines
@@ -110,17 +105,17 @@ export class LineChartComponent implements OnInit, OnChanges,  AfterViewInit {
     //   );
 
     // Add Y Axis Label
-    g.append('g')
-      .call(d3.axisLeft(this.y)
-        .tickFormat(d => formatCurrency(Number(d), 'en-US', '$', 'USD'))
-      )
-      .append('text')
-      .attr('fill', '#000')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 6)
-      .attr('dy', '0.5em')
-      .attr('text-anchor', 'end')
-      .text('Price ($)');
+    // g.append('g')
+    //   .call(d3.axisLeft(this.y)
+    //     .tickFormat(d => formatCurrency(Number(d), 'en-US', '$', 'USD'))
+    //   )
+    //   .append('text')
+    //   .attr('fill', '#000')
+    //   .attr('transform', 'rotate(-90)')
+    //   .attr('y', 6)
+    //   .attr('dy', '0.5em')
+    //   .attr('text-anchor', 'end')
+      // .text('Price ($)');
 
     // Add X Axis Label
     g.append('g')
