@@ -19,7 +19,7 @@ export class UsMapComponent implements OnInit, AfterViewInit, OnChanges {
   constructor() { }
 
   async ngAfterViewInit(): Promise<any>  {
-    this.stateData = await d3.json<any>('../../assets/us-data.json');
+    this.stateData = await d3.json<any>('/assets/us-data.json');
     this.createChart();
   }
 
